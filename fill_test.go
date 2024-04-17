@@ -2,12 +2,27 @@ package base
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"testing"
 )
 
+func getTestExcelFile() string {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	return path.Join(currentDir, "test/test.xlsx")
+}
+
 func TestFillFixedStruct(t *testing.T) {
 	var myXls TXlsx
-	myXls.OpenFile("/Users/benson/program/go/apsec/sanxia/impdata/test/test.xlsx")
+	fn := getTestExcelFile()
+	if fn == "" {
+		t.Errorf("getTestExcelFile failed %s", fn)
+	}
+	t.Log(fn)
+	myXls.OpenFile(fn)
 	sheetsName := myXls.GetSheetsName()
 	for key, sheetName := range sheetsName {
 		fmt.Println(key, sheetName)
@@ -35,7 +50,12 @@ func TestFillFixedStruct(t *testing.T) {
 
 func TestFillList(t *testing.T) {
 	var myXls TXlsx
-	myXls.OpenFile("/Users/benson/program/go/apsec/sanxia/impdata/test/test.xlsx")
+	fn := getTestExcelFile()
+	if fn == "" {
+		t.Errorf("getTestExcelFile failed %s", fn)
+	}
+	t.Log(fn)
+	myXls.OpenFile(fn)
 	sheetsName := myXls.GetSheetsName()
 	for key, sheetName := range sheetsName {
 		fmt.Println(key, sheetName)
@@ -66,7 +86,12 @@ func TestFillList(t *testing.T) {
 
 func TestFillListStart4(t *testing.T) {
 	var myXls TXlsx
-	myXls.OpenFile("/Users/benson/program/go/apsec/sanxia/impdata/test/test.xlsx")
+	fn := getTestExcelFile()
+	if fn == "" {
+		t.Errorf("getTestExcelFile failed %s", fn)
+	}
+	t.Log(fn)
+	myXls.OpenFile(fn)
 	sheetsName := myXls.GetSheetsName()
 	for key, sheetName := range sheetsName {
 		fmt.Println(key, sheetName)
@@ -97,7 +122,12 @@ func TestFillListStart4(t *testing.T) {
 
 func TestFillListStart4End15(t *testing.T) {
 	var myXls TXlsx
-	myXls.OpenFile("/Users/benson/program/go/apsec/sanxia/impdata/test/test.xlsx")
+	fn := getTestExcelFile()
+	if fn == "" {
+		t.Errorf("getTestExcelFile failed %s", fn)
+	}
+	t.Log(fn)
+	myXls.OpenFile(fn)
 	sheetsName := myXls.GetSheetsName()
 	for key, sheetName := range sheetsName {
 		fmt.Println(key, sheetName)
