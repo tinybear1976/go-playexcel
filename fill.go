@@ -56,8 +56,10 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 				}
 			}
 		}
+		return nil
+	} else {
+		return errors.New("未找到sheetName:" + fromSheetName + "的sheet")
 	}
-	return nil
 }
 
 func string2bool(v string) bool {
@@ -155,6 +157,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 			_newSlices = reflect.Append(_newSlices, _item)
 		}
 		return _newSlices.Interface(), nil
+	} else {
+		return nil, errors.New("未找到sheetName为" + fromSheetName + "的sheet")
 	}
-	return nil, nil
 }
