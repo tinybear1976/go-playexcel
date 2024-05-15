@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/shopspring/decimal"
 	"github.com/tinybear1976/go-playexcel/core"
 )
 
@@ -45,13 +46,34 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 					case reflect.String:
 						elem.Field(i).SetString(v)
 					case reflect.Int:
-						n, _ := strconv.Atoi(v)
+						n, _err := strconv.Atoi(v)
+						if _err != nil {
+							n = 0
+						}
 						elem.Field(i).SetInt(int64(n))
 					case reflect.Float32, reflect.Float64:
-						n, _ := strconv.ParseFloat(v, 64)
+						n, _err := strconv.ParseFloat(v, 64)
+						if _err != nil {
+							n = 0.0
+						}
 						elem.Field(i).SetFloat(n)
 					case reflect.Bool:
 						elem.Field(i).SetBool(string2bool(v))
+					case reflect.Struct:
+						if field.Type.Name() == "Decimal" {
+							// Decimal
+							var dec decimal.Decimal
+							if v == "" {
+								dec = decimal.NewFromInt(0)
+								elem.Field(i).Set(reflect.ValueOf(dec))
+							} else {
+								dec, _err := decimal.NewFromString(v)
+								if _err != nil {
+									dec = decimal.NewFromInt(0)
+								}
+								elem.Field(i).Set(reflect.ValueOf(dec))
+							}
+						}
 					}
 				}
 			}
@@ -143,13 +165,34 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 						case reflect.String:
 							_item.Field(i).SetString(v)
 						case reflect.Int:
-							n, _ := strconv.Atoi(v)
+							n, _err := strconv.Atoi(v)
+							if _err != nil {
+								n = 0
+							}
 							_item.Field(i).SetInt(int64(n))
 						case reflect.Float32, reflect.Float64:
-							n, _ := strconv.ParseFloat(v, 64)
+							n, _err := strconv.ParseFloat(v, 64)
+							if _err != nil {
+								n = 0.0
+							}
 							_item.Field(i).SetFloat(n)
 						case reflect.Bool:
 							_item.Field(i).SetBool(string2bool(v))
+						case reflect.Struct:
+							if field.Type.Name() == "Decimal" {
+								// Decimal
+								var dec decimal.Decimal
+								if v == "" {
+									dec = decimal.NewFromInt(0)
+									_item.Field(i).Set(reflect.ValueOf(dec))
+								} else {
+									dec, _err := decimal.NewFromString(v)
+									if _err != nil {
+										dec = decimal.NewFromInt(0)
+									}
+									_item.Field(i).Set(reflect.ValueOf(dec))
+								}
+							}
 						}
 					}
 				}

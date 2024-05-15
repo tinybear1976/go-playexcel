@@ -1,10 +1,14 @@
 package base
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
+	"reflect"
 	"testing"
+
+	"github.com/shopspring/decimal"
 )
 
 func getTestExcelFile() string {
@@ -67,9 +71,9 @@ func TestFillList(t *testing.T) {
 	}
 
 	type Test2 struct {
-		Month  string `axis_y:"B"`
-		Value1 string `axis_y:"C"`
-		Value2 string `axis_y:"D"`
+		Month  int             `axis_y:"B"`
+		Value1 decimal.Decimal `axis_y:"C"`
+		Value2 decimal.Decimal `axis_y:"D"`
 	}
 	ss := Test2{}
 	arr, err := myXls.FillList("eb2016", ss)
@@ -154,4 +158,56 @@ func TestFillListStart4End15(t *testing.T) {
 		}
 		//t.Logf("TestFillFixedStruct success, %#v", arr)
 	}
+}
+
+func TestDecimalReflectType(t *testing.T) {
+	id := &innerDec{}
+	err := DecRTyp(id)
+	if err != nil {
+		t.Logf("TestDecimalReflectType failed, err: %v", err)
+	} else {
+		t.Logf("TestDecimalReflectType success, %#v", id)
+	}
+}
+
+type innerDec struct {
+	Money decimal.Decimal
+}
+
+func DecRTyp(pObj any) error {
+	valPtr := reflect.ValueOf(pObj)
+	if valPtr.Kind() != reflect.Ptr {
+		return errors.New("传入的参数pObj必须为结构体指针")
+	}
+	if valPtr.Elem().Kind() != reflect.Struct {
+		return errors.New("传入的参数pObj必须为结构体指针")
+	}
+
+	elem := valPtr.Elem()
+	for i := 0; i < elem.NumField(); i++ {
+		field := elem.Type().Field(i)
+		fmt.Printf("func log: %v\n", field.Type.Kind())
+		fmt.Printf("func log: %v\n", field.Type.Name())
+		// switch field.Type.Kind() {
+		// case reflect.String:
+		// 	// elem.Field(i).SetString(v)
+		// case reflect.Int:
+		// 	// n, _err := strconv.Atoi(v)
+		// 	// if _err != nil {
+		// 	// 	n = 0
+		// 	// }
+		// 	// elem.Field(i).SetInt(int64(n))
+		// case reflect.Float32, reflect.Float64:
+		// 	// n, _err := strconv.ParseFloat(v, 64)
+		// 	// if _err != nil {
+		// 	// 	n = 0.0
+		// 	// }
+		// 	// elem.Field(i).SetFloat(n)
+		// case reflect.Bool:
+		// 	// elem.Field(i).SetBool(string2bool(v))
+
+		// }
+	}
+	return nil
+
 }
