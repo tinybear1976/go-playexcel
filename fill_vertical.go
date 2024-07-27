@@ -2,10 +2,8 @@ package base
 
 import (
 	"errors"
-	"math"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/shopspring/decimal"
 	"github.com/tinybear1976/go-playexcel/core"
@@ -121,17 +119,4 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 	}
 	return nil, errors.New("未找到sheetName为" + fromSheetName + "的sheet")
 
-}
-
-// 转换为列号（入参应该为字母表达的字符串）
-func column(colString string) int {
-	colString = strings.ToUpper(colString)
-	_colLen := len(colString)
-	var _col float64 = 0
-	for idx, c := range colString {
-		_sv := float64(c - 'A' + 1)
-		_bitWeight := float64(_colLen - idx - 1)
-		_col += _sv * math.Pow(26, _bitWeight)
-	}
-	return int(_col)
 }
