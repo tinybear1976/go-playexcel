@@ -320,3 +320,50 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 		}
 	}
 ```
+
+## FillVerticalList
+
+方法：FillVerticalList(fromSheetName string, item any, opts ...VerticalOption) (any, error) 
+功能：根据 sheetName,返回列表,每行数据结构为 rowItem 结构体定义，此方法采用 ShrinkData 进行操作，请确保 ShrinkData 已经填充完毕
+
+参数：
+
+- fromSheetName (string): 需要读取的 sheet 名称。
+- item (any): 结构实例。主要用于确定表格中每行数据的样式。结构体 Tag 应该采用`axis_y`用来标记字段对应的列。因为是垂直方向列表，所以tag值例：  'axis_y:2'
+- opts (...VerticalOption): 配置选项，可以设置行数限制。默认情况从第一行至最后一行。如果需要指定开始行可以使用`WithStartColumn(int)`方法。若需要指定结束行可以使用`WithEndColumn(int)`方法。
+
+返回值：
+返回一个结构体切片。该结构体切片由传入的结构体类型组成
+
+示例：
+
+```go
+	var myXls TXlsx
+	myXls.OpenFile("/Users/benson/program/go/apsec/sanxia/impdata/test/test.xlsx")
+	sheetsName := myXls.GetSheetsName()
+	for key, sheetName := range sheetsName {
+		fmt.Println(key, sheetName)
+		_, err := myXls.GetSheet(sheetName)
+		if err != nil {
+			fmt.Println("load sheet error: ", sheetName, err)
+			continue
+		}
+	}
+
+	type Test2 struct {
+		Month  string `axis_y:"3"`
+		Value1 string `axis_y:"4"`
+		Value2 string `axis_y:"5"`
+	}
+	ss := Test2{}
+	arr, err := myXls.FillList("eb2016", ss, WithStartColumn(4))
+	if err != nil {
+		t.Logf("failed, err: %v", err)
+	} else {
+		rst := arr.([]Test2)
+		for _, v := range rst {
+			fmt.Printf("%v\n", v)
+		}
+	}
+```
+
