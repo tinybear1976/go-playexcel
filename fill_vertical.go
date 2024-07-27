@@ -58,12 +58,11 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 		_structSlicesType := reflect.SliceOf(_structType)
 		// fmt.Printf("log: %v\n", _structSlicesType)
 		_newSlices := reflect.MakeSlice(_structSlicesType, 0, 0)
-		if len(data) == 0 {
+		if len(data) <= 0 {
 			return _newSlices.Interface(), nil
 		}
-		_rowCount := len(data[0]) // 获得列数，等价于行式列表中的行数
 		if paramates.EndColumn == -1 {
-			paramates.EndColumn = _rowCount
+			paramates.EndColumn = len(data[0]) // 获得列数，等价于行式列表中的行数
 		}
 
 		for y := paramates.StartColumn; y <= paramates.EndColumn; y++ {

@@ -142,15 +142,17 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 	// reflect.TypeOf(listObj).Elem().Elem() 结构体
 
 	if data, ok := xls.sheetsShrinkData[fromSheetName]; ok {
-		if paramates.EndRow == -1 {
-			paramates.EndRow = len(data)
-		}
-
 		_structType := reflect.TypeOf(rowItem)
 		// fmt.Printf("log: %v\n", _structType)
 		_structSlicesType := reflect.SliceOf(_structType)
 		// fmt.Printf("log: %v\n", _structSlicesType)
 		_newSlices := reflect.MakeSlice(_structSlicesType, 0, 0)
+		if len(data) <= 0 {
+			return _newSlices, nil
+		}
+		if paramates.EndRow == -1 {
+			paramates.EndRow = len(data)
+		}
 		for x := paramates.StartRow; x <= paramates.EndRow; x++ {
 
 			// 创建结构体的新实例
