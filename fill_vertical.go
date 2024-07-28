@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/shopspring/decimal"
 	"github.com/tinybear1976/go-playexcel/core"
@@ -88,11 +89,25 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 				field := _item.Type().Field(i)
 				x := field.Tag.Get(listTag)
 				if x != "" {
-					// 该x值必须为整数
-					_x, err := strconv.Atoi(x)
-					if err != nil {
-						return nil, errors.New("垂直列表的Tag值必须为整数.例如 axis_y:'2'")
+					var _x int
+					_convertDefaultValue := ""
+					if strings.Contains(x, ",") {
+						var _err error
+						strs := strings.Split(x, ",")
+						_x, _err = strconv.Atoi(strs[0])
+						if _err != nil {
+							return nil, errors.New("垂直列表的Tag值必须为整数.例如 axis_y:'2'")
+						}
+						_convertDefaultValue = strs[1]
+					} else {
+						var _err error
+						_x, _err = strconv.Atoi(x)
+						if _err != nil {
+							return nil, errors.New("垂直列表的Tag值必须为整数.例如 axis_y:'2'")
+						}
 					}
+					// 该x值必须为整数
+
 					v, err := core.GetCellValueByVerticalTag(_x, y, data)
 					if err == nil {
 						switch field.Type.Kind() {
@@ -101,13 +116,19 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 						case reflect.Int:
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
-								n = 0
+								n, _err = strconv.Atoi(_convertDefaultValue)
+								if _err != nil {
+									n = 0
+								}
 							}
 							_item.Field(i).SetInt(int64(n))
 						case reflect.Float32, reflect.Float64:
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
-								n = 0.0
+								n, _err = strconv.ParseFloat(_convertDefaultValue, 64)
+								if _err != nil {
+									n = 0.0
+								}
 							}
 							_item.Field(i).SetFloat(n)
 						case reflect.Bool:
@@ -116,16 +137,14 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 							if field.Type.Name() == "Decimal" {
 								// Decimal
 								var dec decimal.Decimal
-								if v == "" {
-									dec = decimal.NewFromInt(0)
-									_item.Field(i).Set(reflect.ValueOf(dec))
-								} else {
-									dec, _err := decimal.NewFromString(v)
+								dec, _err := decimal.NewFromString(v)
+								if _err != nil {
+									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)
 									}
-									_item.Field(i).Set(reflect.ValueOf(dec))
 								}
+								_item.Field(i).Set(reflect.ValueOf(dec))
 							}
 						}
 					}

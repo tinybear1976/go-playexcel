@@ -40,7 +40,14 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 			field := elem.Type().Field(i)
 			tag := field.Tag.Get(tupleTag)
 			if tag != "" {
-				v, err := core.GetCellValueByTag(tag, data)
+				_cellName := tag
+				_convertDefaultValue := ""
+				if strings.Contains(tag, ",") {
+					strs := strings.Split(tag, ",")
+					_cellName = strs[0]
+					_convertDefaultValue = strs[1]
+				}
+				v, err := core.GetCellValueByTag(_cellName, data)
 				if err == nil {
 					switch field.Type.Kind() {
 					case reflect.String:
@@ -48,13 +55,19 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 					case reflect.Int:
 						n, _err := strconv.Atoi(v)
 						if _err != nil {
-							n = 0
+							n, err = strconv.Atoi(_convertDefaultValue)
+							if err != nil {
+								n = 0
+							}
 						}
 						elem.Field(i).SetInt(int64(n))
 					case reflect.Float32, reflect.Float64:
 						n, _err := strconv.ParseFloat(v, 64)
 						if _err != nil {
-							n = 0.0
+							n, err = strconv.ParseFloat(_convertDefaultValue, 64)
+							if err != nil {
+								n = 0.0
+							}
 						}
 						elem.Field(i).SetFloat(n)
 					case reflect.Bool:
@@ -63,16 +76,14 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 						if field.Type.Name() == "Decimal" {
 							// Decimal
 							var dec decimal.Decimal
-							if v == "" {
-								dec = decimal.NewFromInt(0)
-								elem.Field(i).Set(reflect.ValueOf(dec))
-							} else {
-								dec, _err := decimal.NewFromString(v)
+							dec, _err := decimal.NewFromString(v)
+							if _err != nil {
+								dec, _err = decimal.NewFromString(_convertDefaultValue)
 								if _err != nil {
 									dec = decimal.NewFromInt(0)
 								}
-								elem.Field(i).Set(reflect.ValueOf(dec))
 							}
+							elem.Field(i).Set(reflect.ValueOf(dec))
 						}
 					}
 				}
@@ -178,7 +189,14 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 				field := _item.Type().Field(i)
 				y := field.Tag.Get(listTag)
 				if y != "" {
-					v, err := core.GetCellValueByTag(y+strconv.Itoa(x), data)
+					yCol := y
+					_convertDefaultValue := ""
+					if strings.Contains(y, ",") {
+						strs := strings.Split(y, ",")
+						yCol = strs[0]
+						_convertDefaultValue = strs[1]
+					}
+					v, err := core.GetCellValueByTag(yCol+strconv.Itoa(x), data)
 					if err == nil {
 						switch field.Type.Kind() {
 						case reflect.String:
@@ -186,13 +204,23 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 						case reflect.Int:
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
-								n = 0
+								_n, _err := strconv.Atoi(_convertDefaultValue)
+								if _err == nil {
+									n = _n
+								} else {
+									n = 0
+								}
 							}
 							_item.Field(i).SetInt(int64(n))
 						case reflect.Float32, reflect.Float64:
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
-								n = 0.0
+								_n, _err := strconv.ParseFloat(_convertDefaultValue, 64)
+								if _err == nil {
+									n = _n
+								} else {
+									n = 0.0
+								}
 							}
 							_item.Field(i).SetFloat(n)
 						case reflect.Bool:
@@ -201,16 +229,14 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 							if field.Type.Name() == "Decimal" {
 								// Decimal
 								var dec decimal.Decimal
-								if v == "" {
-									dec = decimal.NewFromInt(0)
-									_item.Field(i).Set(reflect.ValueOf(dec))
-								} else {
-									dec, _err := decimal.NewFromString(v)
+								dec, _err := decimal.NewFromString(v)
+								if _err != nil {
+									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)
 									}
-									_item.Field(i).Set(reflect.ValueOf(dec))
 								}
+								_item.Field(i).Set(reflect.ValueOf(dec))
 							}
 						}
 					}

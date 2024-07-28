@@ -367,3 +367,21 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 		}
 	}
 ```
+
+## 关于数值转换异常的补充处理
+
+无论哪种填充方式，当结构体字段设置为整形或浮点或 decimal 时，可以在 tag 的内部使用逗号分隔，用于设置当转换失败时，采用的默认值
+
+```go
+	type Test2 struct {
+		Month  string `axis_y:"3"`
+		Value1 int `axis_y:"4"`
+		Value2 float64 `axis_y:"5"`
+	}
+
+	type Test2 struct {
+		Month  string `axis_y:"3"`
+		Value1 int `axis_y:"4,-1"`
+		Value2 float64 `axis_y:"5"`
+	}
+```
