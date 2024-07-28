@@ -92,8 +92,9 @@ func string2bool(v string) bool {
 // 行填充  =========================================================================
 
 type TParamates struct {
-	StartRow int
-	EndRow   int
+	StartRow    int
+	EndRow      int
+	IgnoreEmpty bool
 }
 
 type Option func(*TParamates)
@@ -116,11 +117,18 @@ func WithEndRow(endRow int) Option {
 	}
 }
 
+func WithIgnoreAllEmptyRow(ignore bool) Option {
+	return func(p *TParamates) {
+		p.IgnoreEmpty = ignore
+	}
+}
+
 // 根据sheetName,返回列表,每行数据结构为rowItem结构体定义，此方法采用ShrinkData进行操作，请确保ShrinkData已经填充完毕
 func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (any, error) {
 	paramates := &TParamates{
-		StartRow: 1,
-		EndRow:   -1,
+		StartRow:    1,
+		EndRow:      -1,
+		IgnoreEmpty: true,
 	}
 	for _, opt := range opts {
 		opt(paramates)
@@ -154,9 +162,18 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 			paramates.EndRow = len(data)
 		}
 		for x := paramates.StartRow; x <= paramates.EndRow; x++ {
-
 			// 创建结构体的新实例
 			_item := reflect.New(_structType).Elem()
+			if paramates.IgnoreEmpty {
+				allEmpty, err := checkAllEmpty(_item, x, data)
+				if err != nil {
+					return nil, err
+				}
+				if allEmpty {
+					continue
+				}
+			}
+
 			for i := 0; i < _item.NumField(); i++ {
 				field := _item.Type().Field(i)
 				y := field.Tag.Get(listTag)
@@ -205,4 +222,24 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 	} else {
 		return nil, errors.New("未找到sheetName为" + fromSheetName + "的sheet")
 	}
+}
+
+func checkAllEmpty(obj reflect.Value, x int, data [][]string) (bool, error) {
+	excepted := 0
+	empty := 0
+	for i := 0; i < obj.NumField(); i++ {
+		field := obj.Type().Field(i)
+		y := field.Tag.Get(listTag)
+		if y != "" {
+			excepted++
+			v, err := core.GetCellValueByTag(y+strconv.Itoa(x), data)
+			if err != nil {
+				return false, err
+			}
+			if v == "" {
+				empty++
+			}
+		}
+	}
+	return empty == excepted, nil
 }

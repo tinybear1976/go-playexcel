@@ -284,7 +284,7 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 
 - fromSheetName (string): 需要读取的 sheet 名称。
 - rowItem (any): 结构实例。主要用于确定表格中每行数据的样式。结构体 Tag 应该采用`axis_y`用来标记字段对应的列
-- opts (...Option): 配置选项，可以设置行数限制。默认情况从第一行至最后一行。如果需要指定开始行可以使用`WithStartRow(int)`方法。若需要指定结束行可以使用`WithEndRow(int)`方法。
+- opts (...Option): 配置选项，可以设置行数限制。默认情况从第一行至最后一行。如果需要指定开始行可以使用`WithStartRow(int)`方法。若需要指定结束行可以使用`WithEndRow(int)`方法。`WithIgnoreAllEmptyRow(bool)`方法用于预判是否放弃全空行，默认值 true
 
 返回值：
 返回一个结构体切片。该结构体切片由传入的结构体类型组成

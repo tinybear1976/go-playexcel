@@ -74,13 +74,15 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 		for y := paramates.StartColumn; y <= paramates.EndColumn; y++ {
 			// 创建结构体的新实例
 			_item := reflect.New(_structType).Elem()
-			allEmpty, err := checkAllEmpty(_item, y, data)
-			if err != nil {
-				return nil, err
-			}
-			if allEmpty {
-				// 放弃全空列
-				continue
+			if paramates.IgnoreAllEmpty {
+				allEmpty, err := checkVerticalAllEmpty(_item, y, data)
+				if err != nil {
+					return nil, err
+				}
+				if allEmpty {
+					// 放弃全空列
+					continue
+				}
 			}
 			for i := 0; i < _item.NumField(); i++ {
 				field := _item.Type().Field(i)
@@ -137,8 +139,8 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 
 }
 
-// checkAllEmpty 检查所有字段是否都为空字符串
-func checkAllEmpty(obj reflect.Value, y int, data [][]string) (bool, error) {
+// checkVerticalAllEmpty 检查垂直列表所有字段是否都为空字符串
+func checkVerticalAllEmpty(obj reflect.Value, y int, data [][]string) (bool, error) {
 	excepted := 0
 	empty := 0
 	for i := 0; i < obj.NumField(); i++ {
