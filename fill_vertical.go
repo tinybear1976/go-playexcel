@@ -167,6 +167,10 @@ func checkVerticalAllEmpty(obj reflect.Value, y int, data [][]string) (bool, err
 		x := field.Tag.Get(listTag)
 		if x != "" {
 			excepted++
+			if strings.Contains(x, ",") {
+				strs := strings.Split(x, ",")
+				x = strs[0]
+			}
 			// 该x值必须为整数
 			_x, err := strconv.Atoi(x)
 			if err != nil {

@@ -257,8 +257,13 @@ func checkAllEmpty(obj reflect.Value, x int, data [][]string) (bool, error) {
 		field := obj.Type().Field(i)
 		y := field.Tag.Get(listTag)
 		if y != "" {
+			yCol := y
+			if strings.Contains(y, ",") {
+				strs := strings.Split(y, ",")
+				yCol = strs[0]
+			}
 			excepted++
-			v, err := core.GetCellValueByTag(y+strconv.Itoa(x), data)
+			v, err := core.GetCellValueByTag(yCol+strconv.Itoa(x), data)
 			if err != nil {
 				return false, err
 			}
