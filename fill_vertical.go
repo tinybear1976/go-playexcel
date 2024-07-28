@@ -10,8 +10,9 @@ import (
 )
 
 type TVerticalParamates struct {
-	StartColumn int
-	EndColumn   int
+	StartColumn    int
+	EndColumn      int
+	IgnoreAllEmpty bool
 }
 
 type VerticalOption func(*TVerticalParamates)
@@ -34,11 +35,18 @@ func WithEndColumn(endCol int) VerticalOption {
 	}
 }
 
+func WithIgnoreAllEmpty(ignore bool) VerticalOption {
+	return func(p *TVerticalParamates) {
+		p.IgnoreAllEmpty = ignore
+	}
+}
+
 // FillVerticalList 填充垂直列表
 func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...VerticalOption) (any, error) {
 	paramates := &TVerticalParamates{
-		StartColumn: 1,
-		EndColumn:   -1,
+		StartColumn:    1,
+		EndColumn:      -1,
+		IgnoreAllEmpty: true,
 	}
 	for _, opt := range opts {
 		opt(paramates)
@@ -66,6 +74,14 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 		for y := paramates.StartColumn; y <= paramates.EndColumn; y++ {
 			// 创建结构体的新实例
 			_item := reflect.New(_structType).Elem()
+			allEmpty, err := checkAllEmpty(_item, y, data)
+			if err != nil {
+				return nil, err
+			}
+			if allEmpty {
+				// 放弃全空列
+				continue
+			}
 			for i := 0; i < _item.NumField(); i++ {
 				field := _item.Type().Field(i)
 				x := field.Tag.Get(listTag)
@@ -119,4 +135,30 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 	}
 	return nil, errors.New("未找到sheetName为" + fromSheetName + "的sheet")
 
+}
+
+// checkAllEmpty 检查所有字段是否都为空字符串
+func checkAllEmpty(obj reflect.Value, y int, data [][]string) (bool, error) {
+	excepted := 0
+	empty := 0
+	for i := 0; i < obj.NumField(); i++ {
+		field := obj.Type().Field(i)
+		x := field.Tag.Get(listTag)
+		if x != "" {
+			excepted++
+			// 该x值必须为整数
+			_x, err := strconv.Atoi(x)
+			if err != nil {
+				return false, errors.New("垂直列表的Tag值必须为整数.例如 axis_y:'2'")
+			}
+			v, err := core.GetCellValueByVerticalTag(_x, y, data)
+			if err != nil {
+				return false, err
+			}
+			if v == "" {
+				empty++
+			}
+		}
+	}
+	return empty == excepted, nil
 }

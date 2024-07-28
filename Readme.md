@@ -323,14 +323,15 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 
 ## FillVerticalList
 
-方法：FillVerticalList(fromSheetName string, item any, opts ...VerticalOption) (any, error) 
+方法：FillVerticalList(fromSheetName string, item any, opts ...VerticalOption) (any, error)
 功能：根据 sheetName,返回列表,每行数据结构为 rowItem 结构体定义，此方法采用 ShrinkData 进行操作，请确保 ShrinkData 已经填充完毕
 
 参数：
 
 - fromSheetName (string): 需要读取的 sheet 名称。
-- item (any): 结构实例。主要用于确定表格中每行数据的样式。结构体 Tag 应该采用`axis_y`用来标记字段对应的列。因为是垂直方向列表，所以tag值例：  'axis_y:2'
+- item (any): 结构实例。主要用于确定表格中每行数据的样式。结构体 Tag 应该采用`axis_y`用来标记字段对应的列。因为是垂直方向列表，所以 tag 值例： 'axis_y:2'
 - opts (...VerticalOption): 配置选项，可以设置行数限制。默认情况从第一行至最后一行。如果需要指定开始行可以使用`WithStartColumn(int)`方法。若需要指定结束行可以使用`WithEndColumn(int)`方法。
+  WithIgnoreAllEmpty(bool)参数用于指明是否忽略全空列，默认忽略，其主要原因考虑到有些元组性数据与垂直列数据混合排版时，可能会因为其他不相关数据列数过多，导致垂直列表位置出现全空列。
 
 返回值：
 返回一个结构体切片。该结构体切片由传入的结构体类型组成
@@ -366,4 +367,3 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 		}
 	}
 ```
-
