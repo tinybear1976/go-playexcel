@@ -2,7 +2,6 @@ package base
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"slices"
 	"strconv"
@@ -66,7 +65,7 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 								[]string{
 									_cellName,
 									v,
-									fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为整数失败", _cellName, v),
+									"整数",
 								})
 							n, err = strconv.Atoi(_convertDefaultValue)
 							if err != nil {
@@ -85,7 +84,7 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 								[]string{
 									_cellName,
 									v,
-									fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为浮点小数失败", _cellName, v),
+									"浮点数",
 								})
 							n, err = strconv.ParseFloat(_convertDefaultValue, 64)
 							if err != nil {
@@ -109,7 +108,7 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 									[]string{
 										_cellName,
 										v,
-										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为定点小数失败", _cellName, v),
+										"定点数",
 									})
 								dec, _err = decimal.NewFromString(_convertDefaultValue)
 								if _err != nil {
@@ -249,7 +248,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 									[]string{
 										_cellName,
 										v,
-										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为整数失败", _cellName, v),
+										"整数",
 									})
 								_n, _err := strconv.Atoi(_convertDefaultValue)
 								if _err == nil {
@@ -270,7 +269,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 									[]string{
 										_cellName,
 										v,
-										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为浮点小数失败", _cellName, v),
+										"浮点数",
 									})
 								_n, _err := strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err == nil {
@@ -296,7 +295,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 										[]string{
 											_cellName,
 											v,
-											fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为定点小数失败", _cellName, v),
+											"定点数",
 										})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {

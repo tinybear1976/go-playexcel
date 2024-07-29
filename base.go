@@ -25,7 +25,7 @@ type TXlsx struct {
 
 // 获得最近一次转换填充(Fill类函数)动作中所产生的转换错误.
 // 如果没有错误，返回nil，否则返回错误信息切片
-// 二维数组的第二维格式:  {"D3","errorstring","中文提示"}
+// 返回的二维数组的第二维格式:  {"D3","原始字符串","整数|浮点数|定点数"}
 func (xls TXlsx) GetLastConvertErrors() [][]string {
 	return xls.convertErrors
 }

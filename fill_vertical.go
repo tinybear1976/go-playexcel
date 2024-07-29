@@ -2,7 +2,6 @@ package base
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -128,7 +127,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 									[]string{
 										_cellName,
 										v,
-										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为整数失败", _cellName, v),
+										"整数",
 									})
 								n, _err = strconv.Atoi(_convertDefaultValue)
 								if _err != nil {
@@ -147,7 +146,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 									[]string{
 										_cellName,
 										v,
-										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为浮点小数失败", _cellName, v),
+										"浮点数",
 									})
 								n, _err = strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err != nil {
@@ -171,7 +170,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 										[]string{
 											_cellName,
 											v,
-											fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为整数失败", _cellName, v),
+											"定点数",
 										})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
