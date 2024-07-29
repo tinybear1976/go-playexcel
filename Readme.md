@@ -234,13 +234,11 @@ if err != nil {
 fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 ```
 
-
-
 ## GetLastConvertErrors
 
-方法：GetLastConvertErrors() [][]string 
+方法：GetLastConvertErrors() [][]string
 
-功能：获取FillXXX函数填充过程发生的转换错误信息。每次调用一个Fill类函数后跟随调用。每次调用Fill类函数，当Fill类函数进入到实质性转换前，都会将错误信息列表设置为nil，所以无法保存历史错误信息。
+功能：获取 FillXXX 函数填充过程发生的转换错误信息。每次调用一个 Fill 类函数后跟随调用。每次调用 Fill 类函数，当 Fill 类函数进入到实质性转换前，都会将错误信息列表设置为 nil，所以无法保存历史错误信息。
 
 ## FillTuple
 
