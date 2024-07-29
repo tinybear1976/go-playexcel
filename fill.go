@@ -2,6 +2,7 @@ package base
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"slices"
 	"strconv"
@@ -32,9 +33,11 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 	if valPtr.Elem().Kind() != reflect.Struct {
 		return errors.New("传入的参数pObj必须为结构体指针")
 	}
-
+	if xls.sheetsShrinkData == nil {
+		return errors.New("可能未打开文件(收缩数据集为空)")
+	}
 	if data, ok := xls.sheetsShrinkData[fromSheetName]; ok {
-		// valPtr.Elem().Set(reflect.ValueOf(data))
+		xls.convertErrors = nil // 转换前初始化
 		elem := valPtr.Elem()
 		for i := 0; i < elem.NumField(); i++ {
 			field := elem.Type().Field(i)
@@ -55,6 +58,16 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 					case reflect.Int:
 						n, _err := strconv.Atoi(v)
 						if _err != nil {
+							// 记录转换错误
+							if xls.convertErrors == nil {
+								xls.convertErrors = [][]string{}
+							}
+							xls.convertErrors = append(xls.convertErrors,
+								[]string{
+									_cellName,
+									v,
+									fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为整数失败", _cellName, v),
+								})
 							n, err = strconv.Atoi(_convertDefaultValue)
 							if err != nil {
 								n = 0
@@ -64,6 +77,16 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 					case reflect.Float32, reflect.Float64:
 						n, _err := strconv.ParseFloat(v, 64)
 						if _err != nil {
+							// 记录转换错误
+							if xls.convertErrors == nil {
+								xls.convertErrors = [][]string{}
+							}
+							xls.convertErrors = append(xls.convertErrors,
+								[]string{
+									_cellName,
+									v,
+									fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为浮点小数失败", _cellName, v),
+								})
 							n, err = strconv.ParseFloat(_convertDefaultValue, 64)
 							if err != nil {
 								n = 0.0
@@ -78,6 +101,16 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 							var dec decimal.Decimal
 							dec, _err := decimal.NewFromString(v)
 							if _err != nil {
+								// 记录转换错误
+								if xls.convertErrors == nil {
+									xls.convertErrors = [][]string{}
+								}
+								xls.convertErrors = append(xls.convertErrors,
+									[]string{
+										_cellName,
+										v,
+										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为定点小数失败", _cellName, v),
+									})
 								dec, _err = decimal.NewFromString(_convertDefaultValue)
 								if _err != nil {
 									dec = decimal.NewFromInt(0)
@@ -159,7 +192,9 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 	// }
 	// fmt.Println(reflect.TypeOf(listObj).Elem().Elem())
 	// reflect.TypeOf(listObj).Elem().Elem() 结构体
-
+	if xls.sheetsShrinkData == nil {
+		return nil, errors.New("可能未打开文件(收缩数据集为空)")
+	}
 	if data, ok := xls.sheetsShrinkData[fromSheetName]; ok {
 		_structType := reflect.TypeOf(rowItem)
 		// fmt.Printf("log: %v\n", _structType)
@@ -172,6 +207,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 		if paramates.EndRow == -1 {
 			paramates.EndRow = len(data)
 		}
+		xls.convertErrors = nil // 转换前初始化
 		for x := paramates.StartRow; x <= paramates.EndRow; x++ {
 			// 创建结构体的新实例
 			_item := reflect.New(_structType).Elem()
@@ -196,7 +232,8 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 						yCol = strs[0]
 						_convertDefaultValue = strs[1]
 					}
-					v, err := core.GetCellValueByTag(yCol+strconv.Itoa(x), data)
+					_cellName := yCol + strconv.Itoa(x)
+					v, err := core.GetCellValueByTag(_cellName, data)
 					if err == nil {
 						switch field.Type.Kind() {
 						case reflect.String:
@@ -204,6 +241,16 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 						case reflect.Int:
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
+								// 记录转换错误
+								if xls.convertErrors == nil {
+									xls.convertErrors = [][]string{}
+								}
+								xls.convertErrors = append(xls.convertErrors,
+									[]string{
+										_cellName,
+										v,
+										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为整数失败", _cellName, v),
+									})
 								_n, _err := strconv.Atoi(_convertDefaultValue)
 								if _err == nil {
 									n = _n
@@ -215,6 +262,16 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 						case reflect.Float32, reflect.Float64:
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
+								// 记录转换错误
+								if xls.convertErrors == nil {
+									xls.convertErrors = [][]string{}
+								}
+								xls.convertErrors = append(xls.convertErrors,
+									[]string{
+										_cellName,
+										v,
+										fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为浮点小数失败", _cellName, v),
+									})
 								_n, _err := strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err == nil {
 									n = _n
@@ -231,6 +288,16 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 								var dec decimal.Decimal
 								dec, _err := decimal.NewFromString(v)
 								if _err != nil {
+									// 记录转换错误
+									if xls.convertErrors == nil {
+										xls.convertErrors = [][]string{}
+									}
+									xls.convertErrors = append(xls.convertErrors,
+										[]string{
+											_cellName,
+											v,
+											fmt.Sprintf("单元格 %s 内的值 %s 尝试转换为定点小数失败", _cellName, v),
+										})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)

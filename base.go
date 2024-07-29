@@ -10,6 +10,10 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+type tErrorMsg struct {
+	Cell string
+	Msg  string
+}
 type TXlsx struct {
 	// 调用InitFile或InitFileAndReadAll方法后，保存的Excel文件名
 	filename string
@@ -19,6 +23,13 @@ type TXlsx struct {
 	sheetsAlignedData map[string][][]string
 	// 根据sheet名，保存的缩减数据（主要缩减的是空列)
 	sheetsShrinkData map[string][][]string
+	// 用于临时记录某一次转换过程中的错误信息。当执行某个Fill函数后被改变。原则，如果没有任何错误发生，默认值为nil，如果发生错误才会形成切片
+	convertErrors [][]string
+}
+
+// 获得最近一次转换填充(Fill类函数)动作中所产生的转换错误，如果没有错误，返回nil，否则返回错误信息切片
+func (xls TXlsx) GetLastConvertErrors() [][]string {
+	return xls.convertErrors
 }
 
 // 通过内部文件名是否存在判断是否打开过文件
@@ -31,13 +42,16 @@ func (xls *TXlsx) GetFilename() string {
 	return xls.filename
 }
 
-// 获得所有sheet名
+// 获得所有sheet名。如果没有打开过文件，返回nil
 func (xls *TXlsx) GetSheetsName() map[int]string {
 	return xls.sheetsName
 }
 
 // 检查某个sheetName是否存在
 func (xls *TXlsx) SheetNameIsExist(sheetName string) bool {
+	if xls.sheetsName == nil {
+		return false
+	}
 	for _, name := range xls.sheetsName {
 		if name == sheetName {
 			return true
@@ -63,8 +77,8 @@ func (xls *TXlsx) OpenFile(filename string) error {
 	sheets := f.GetSheetMap()
 	xls.filename = filename
 	xls.sheetsName = sheets
-	xls.sheetsAlignedData = make(map[string][][]string)
-	xls.sheetsShrinkData = make(map[string][][]string)
+	// xls.sheetsAlignedData = make(map[string][][]string)
+	// xls.sheetsShrinkData = make(map[string][][]string)
 	// for idx, name := range sheets {
 	// 	fmt.Println(idx, name)
 	// }
@@ -117,15 +131,18 @@ func (xls *TXlsx) OpenFileAndReadAll(filename string) error {
 // 复位重置对象
 func (xls *TXlsx) Reset() {
 	xls.filename = ""
-	xls.sheetsName = make(map[int]string)
-	xls.sheetsAlignedData = make(map[string][][]string)
-	xls.sheetsShrinkData = make(map[string][][]string)
+	xls.sheetsName = nil        // make(map[int]string)
+	xls.sheetsAlignedData = nil // make(map[string][][]string)
+	xls.sheetsShrinkData = nil  // make(map[string][][]string)
+	xls.convertErrors = nil
 }
 
 // 获取sheet对齐数据(所有行)
 func (xls *TXlsx) GetSheet(sheetName string) ([][]string, error) {
-	if rowsData, ok := xls.sheetsAlignedData[sheetName]; ok {
-		return rowsData, nil
+	if xls.sheetsAlignedData != nil {
+		if rowsData, ok := xls.sheetsAlignedData[sheetName]; ok {
+			return rowsData, nil
+		}
 	}
 
 	if !xls.IsOpened() {
@@ -164,9 +181,15 @@ func (xls *TXlsx) GetSheet(sheetName string) ([][]string, error) {
 	}
 	fullRows, err := arrangeRows(rows, mergeCells)
 	if err == nil {
+		if xls.sheetsAlignedData == nil {
+			xls.sheetsAlignedData = make(map[string][][]string)
+		}
 		xls.sheetsAlignedData[sheetName] = fullRows
 		shrinkArr, err := core.ShrinkArray(fullRows)
 		if err == nil {
+			if xls.sheetsShrinkData == nil {
+				xls.sheetsShrinkData = make(map[string][][]string)
+			}
 			xls.sheetsShrinkData[sheetName] = shrinkArr
 			// fmt.Println("table shrink width: ", core.MaxWidth(shrinkArr))
 		}
@@ -175,6 +198,9 @@ func (xls *TXlsx) GetSheet(sheetName string) ([][]string, error) {
 }
 
 func (xls *TXlsx) GetSheetShrinkRow(sheetName string) [][]string {
+	if xls.sheetsShrinkData == nil {
+		return nil
+	}
 	if rowsData, ok := xls.sheetsShrinkData[sheetName]; ok {
 		return rowsData
 	}

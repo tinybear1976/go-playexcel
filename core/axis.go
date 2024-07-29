@@ -68,3 +68,20 @@ func calcRow(rowString string) (int, error) {
 	}
 	return r, nil
 }
+
+// 将数字转为字母列号.
+//
+//	colIndex  int  列号，必须从1开始
+//	@return     string  转换后的字母列号，如果转换不成功返回空字符串
+func ConvertColumnToLetter(colIndex int) string {
+	if colIndex < 1 {
+		return ""
+	}
+	name := ""
+	for colIndex > 0 {
+		mod := (colIndex - 1) % 26
+		name = string(mod+'A') + name
+		colIndex = (colIndex - 1) / 26
+	}
+	return name
+}
