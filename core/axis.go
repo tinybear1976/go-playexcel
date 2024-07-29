@@ -80,7 +80,7 @@ func ConvertColumnToLetter(colIndex int) string {
 	name := ""
 	for colIndex > 0 {
 		mod := (colIndex - 1) % 26
-		name = string(mod+'A') + name
+		name = string(rune(mod+'A')) + name
 		colIndex = (colIndex - 1) / 26
 	}
 	return name
