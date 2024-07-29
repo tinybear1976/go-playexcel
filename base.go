@@ -10,10 +10,6 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-type tErrorMsg struct {
-	Cell string
-	Msg  string
-}
 type TXlsx struct {
 	// 调用InitFile或InitFileAndReadAll方法后，保存的Excel文件名
 	filename string
@@ -27,7 +23,9 @@ type TXlsx struct {
 	convertErrors [][]string
 }
 
-// 获得最近一次转换填充(Fill类函数)动作中所产生的转换错误，如果没有错误，返回nil，否则返回错误信息切片
+// 获得最近一次转换填充(Fill类函数)动作中所产生的转换错误.
+// 如果没有错误，返回nil，否则返回错误信息切片
+// 二维数组的第二维格式:  {"D3","errorstring","中文提示"}
 func (xls TXlsx) GetLastConvertErrors() [][]string {
 	return xls.convertErrors
 }
