@@ -111,7 +111,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
 								// 记录转换错误
-								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
+								xls.addConvertErrorLog([]string{_cellName, v, "int"})
 								n, _err = strconv.Atoi(_convertDefaultValue)
 								if _err != nil {
 									n = 0
@@ -122,7 +122,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
 								// 记录转换错误
-								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
+								xls.addConvertErrorLog([]string{_cellName, v, "float"})
 								n, _err = strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err != nil {
 									n = 0.0
@@ -138,7 +138,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 								dec, _err := decimal.NewFromString(v)
 								if _err != nil {
 									// 记录转换错误
-									xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
+									xls.addConvertErrorLog([]string{_cellName, v, "decimal"})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)

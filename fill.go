@@ -229,7 +229,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
 								// 记录转换错误
-								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
+								xls.addConvertErrorLog([]string{_cellName, v, "int"})
 								_n, _err := strconv.Atoi(_convertDefaultValue)
 								if _err == nil {
 									n = _n
@@ -242,7 +242,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
 								// 记录转换错误
-								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
+								xls.addConvertErrorLog([]string{_cellName, v, "float"})
 								_n, _err := strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err == nil {
 									n = _n
@@ -260,7 +260,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 								dec, _err := decimal.NewFromString(v)
 								if _err != nil {
 									// 记录转换错误
-									xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
+									xls.addConvertErrorLog([]string{_cellName, v, "decimal"})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)
