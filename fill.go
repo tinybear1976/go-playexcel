@@ -20,6 +20,24 @@ var (
 	trueValues = []string{"true", "1", "yes", "y", "t", "on", "是", "对", "真"}
 )
 
+// 增加实际转换错误日志
+func (xls *TXlsx) addConvertErrorLog(s3 []string) {
+	if xls.convertErrors == nil {
+		xls.convertErrors = [][]string{}
+	}
+	s4 := append(s3, "convert")
+	xls.convertErrors = append(xls.convertErrors, s4)
+}
+
+// 增加尝试转换错误日志
+func (xls *TXlsx) addTryConvertErrorLog(s3 []string) {
+	if xls.convertErrors == nil {
+		xls.convertErrors = [][]string{}
+	}
+	s4 := append(s3, "try")
+	xls.convertErrors = append(xls.convertErrors, s4)
+}
+
 // 根据sheetName,填充固定对象,此方法采用ShrinkData进行操作，请确保ShrinkData已经填充完毕
 func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 	if !xls.IsOpened() {
@@ -42,31 +60,20 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 			field := elem.Type().Field(i)
 			tag := field.Tag.Get(tupleTag)
 			if tag != "" {
-				_cellName := tag
-				_convertDefaultValue := ""
-				if strings.Contains(tag, ",") {
-					strs := strings.Split(tag, ",")
-					_cellName = strs[0]
-					_convertDefaultValue = strs[1]
-				}
+				_cellName, _convertDefaultValue, _tryConvertType := decompositionTags(tag)
 				v, err := core.GetCellValueByTag(_cellName, data)
 				if err == nil {
 					switch field.Type.Kind() {
 					case reflect.String:
 						elem.Field(i).SetString(v)
+						if _ok := tryConvert(v, _tryConvertType); !_ok {
+							xls.addTryConvertErrorLog([]string{_cellName, v, _tryConvertType})
+						}
 					case reflect.Int:
 						n, _err := strconv.Atoi(v)
 						if _err != nil {
 							// 记录转换错误
-							if xls.convertErrors == nil {
-								xls.convertErrors = [][]string{}
-							}
-							xls.convertErrors = append(xls.convertErrors,
-								[]string{
-									_cellName,
-									v,
-									"整数",
-								})
+							xls.addConvertErrorLog([]string{_cellName, v, "int"})
 							n, err = strconv.Atoi(_convertDefaultValue)
 							if err != nil {
 								n = 0
@@ -77,15 +84,7 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 						n, _err := strconv.ParseFloat(v, 64)
 						if _err != nil {
 							// 记录转换错误
-							if xls.convertErrors == nil {
-								xls.convertErrors = [][]string{}
-							}
-							xls.convertErrors = append(xls.convertErrors,
-								[]string{
-									_cellName,
-									v,
-									"浮点数",
-								})
+							xls.addConvertErrorLog([]string{_cellName, v, "float"})
 							n, err = strconv.ParseFloat(_convertDefaultValue, 64)
 							if err != nil {
 								n = 0.0
@@ -101,15 +100,7 @@ func (xls *TXlsx) FillTuple(fromSheetName string, pObj any) error {
 							dec, _err := decimal.NewFromString(v)
 							if _err != nil {
 								// 记录转换错误
-								if xls.convertErrors == nil {
-									xls.convertErrors = [][]string{}
-								}
-								xls.convertErrors = append(xls.convertErrors,
-									[]string{
-										_cellName,
-										v,
-										"定点数",
-									})
+								xls.addConvertErrorLog([]string{_cellName, v, "decimal"})
 								dec, _err = decimal.NewFromString(_convertDefaultValue)
 								if _err != nil {
 									dec = decimal.NewFromInt(0)
@@ -224,32 +215,21 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 				field := _item.Type().Field(i)
 				y := field.Tag.Get(listTag)
 				if y != "" {
-					yCol := y
-					_convertDefaultValue := ""
-					if strings.Contains(y, ",") {
-						strs := strings.Split(y, ",")
-						yCol = strs[0]
-						_convertDefaultValue = strs[1]
-					}
-					_cellName := yCol + strconv.Itoa(x)
+					_axis, _convertDefaultValue, _tryConvertType := decompositionTags(y)
+					_cellName := _axis + strconv.Itoa(x)
 					v, err := core.GetCellValueByTag(_cellName, data)
 					if err == nil {
 						switch field.Type.Kind() {
 						case reflect.String:
 							_item.Field(i).SetString(v)
+							if _ok := tryConvert(v, _tryConvertType); !_ok {
+								xls.addTryConvertErrorLog([]string{_cellName, v, _tryConvertType})
+							}
 						case reflect.Int:
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
 								// 记录转换错误
-								if xls.convertErrors == nil {
-									xls.convertErrors = [][]string{}
-								}
-								xls.convertErrors = append(xls.convertErrors,
-									[]string{
-										_cellName,
-										v,
-										"整数",
-									})
+								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
 								_n, _err := strconv.Atoi(_convertDefaultValue)
 								if _err == nil {
 									n = _n
@@ -262,15 +242,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
 								// 记录转换错误
-								if xls.convertErrors == nil {
-									xls.convertErrors = [][]string{}
-								}
-								xls.convertErrors = append(xls.convertErrors,
-									[]string{
-										_cellName,
-										v,
-										"浮点数",
-									})
+								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
 								_n, _err := strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err == nil {
 									n = _n
@@ -288,15 +260,7 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 								dec, _err := decimal.NewFromString(v)
 								if _err != nil {
 									// 记录转换错误
-									if xls.convertErrors == nil {
-										xls.convertErrors = [][]string{}
-									}
-									xls.convertErrors = append(xls.convertErrors,
-										[]string{
-											_cellName,
-											v,
-											"定点数",
-										})
+									xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)
@@ -314,6 +278,44 @@ func (xls *TXlsx) FillList(fromSheetName string, rowItem any, opts ...Option) (a
 	} else {
 		return nil, errors.New("未找到sheetName为" + fromSheetName + "的sheet")
 	}
+}
+
+// 分解tag的参数
+func decompositionTags(tag string) (axis string, defaultValue string, tryConvertType string) {
+	axis = tag
+	if strings.Contains(tag, ",") {
+		strs := strings.Split(tag, ",")
+		axis = strs[0]
+		switch len(strs) {
+		case 2:
+			defaultValue = strs[1]
+		case 3:
+			defaultValue = strs[1]
+			tryConvertType = strs[2]
+		}
+	}
+	return
+}
+
+// 尝试转换字符串为指定类型
+//
+//		val string   需要尝试转换的字符串
+//		kind string  需要转换的类型 int/float/decimal
+//	 @return bool 转换是否成功，true为成功，false为失败。
+//	              如果kind超出 int/float/decimal 三选项，统一返回true
+func tryConvert(val string, kind string) bool {
+	switch kind {
+	case "int":
+		_, err := strconv.Atoi(val)
+		return err == nil
+	case "float":
+		_, err := strconv.ParseFloat(val, 64)
+		return err == nil
+	case "decimal":
+		_, err := decimal.NewFromString(val)
+		return err == nil
+	}
+	return true
 }
 
 func checkAllEmpty(obj reflect.Value, x int, data [][]string) (bool, error) {

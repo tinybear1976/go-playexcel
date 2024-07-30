@@ -376,7 +376,9 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 
 ## 关于数值转换异常的补充处理
 
-无论哪种填充方式，当结构体字段设置为整形或浮点或 decimal 时，可以在 tag 的内部使用逗号分隔，用于设置当转换失败时，采用的默认值
+无论哪种填充方式，当结构体字段设置为整形或浮点或 decimal 时，可以在 tag 的内部使用逗号分隔，用于设置当转换失败时，采用的默认值.
+另外，如果结构体中某个字段是 string 型,在 Tag 中增加第三参数，则表示这个字段未来会以某种数字形式进行使用，所以可对其进行尝试转换，观察其是否会发生转换错误。第三参数可以设置为：int、float、decimal。
+以上内容都的转换错误会被记录到实例内部的日志中，可以调用：GetLastConvertErrors() 获得详细信息
 
 ```go
 	type Test2 struct {
@@ -389,5 +391,11 @@ fmt.Printf("sheet: %s \n收缩数据: %v\n",sheetName,data)
 		Month  string `axis_y:"3"`
 		Value1 int `axis_y:"4,-1"`
 		Value2 float64 `axis_y:"5"`
+	}
+
+  	type Test3 struct {
+		Month  string `axis_y:"3,,int"`
+		Value1 string `axis_y:"4,,float"`
+		Value2 string `axis_y:"5,,decimal"`
 	}
 ```

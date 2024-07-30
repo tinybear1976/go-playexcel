@@ -92,22 +92,10 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 				field := _item.Type().Field(i)
 				x := field.Tag.Get(listTag)
 				if x != "" {
-					var _x int
-					_convertDefaultValue := ""
-					if strings.Contains(x, ",") {
-						var _err error
-						strs := strings.Split(x, ",")
-						_x, _err = strconv.Atoi(strs[0])
-						if _err != nil {
-							return nil, errors.New("垂直列表的Tag值必须为整数.例如 axis_y:'2'")
-						}
-						_convertDefaultValue = strs[1]
-					} else {
-						var _err error
-						_x, _err = strconv.Atoi(x)
-						if _err != nil {
-							return nil, errors.New("垂直列表的Tag值必须为整数.例如 axis_y:'2'")
-						}
+					_axis, _convertDefaultValue, _tryConvertType := decompositionTags(x)
+					_x, _err := strconv.Atoi(_axis)
+					if _err != nil {
+						return nil, errors.New("垂直列表的Tag值第一参数必须为整数.例如 axis_y:'2'")
 					}
 					_cellName := core.ConvertColumnToLetter(y) + strconv.Itoa(_x)
 					// 该x值必须为整数
@@ -116,19 +104,14 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 						switch field.Type.Kind() {
 						case reflect.String:
 							_item.Field(i).SetString(v)
+							if _ok := tryConvert(v, _tryConvertType); !_ok {
+								xls.addTryConvertErrorLog([]string{_cellName, v, _tryConvertType})
+							}
 						case reflect.Int:
 							n, _err := strconv.Atoi(v)
 							if _err != nil {
 								// 记录转换错误
-								if xls.convertErrors == nil {
-									xls.convertErrors = [][]string{}
-								}
-								xls.convertErrors = append(xls.convertErrors,
-									[]string{
-										_cellName,
-										v,
-										"整数",
-									})
+								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
 								n, _err = strconv.Atoi(_convertDefaultValue)
 								if _err != nil {
 									n = 0
@@ -139,15 +122,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 							n, _err := strconv.ParseFloat(v, 64)
 							if _err != nil {
 								// 记录转换错误
-								if xls.convertErrors == nil {
-									xls.convertErrors = [][]string{}
-								}
-								xls.convertErrors = append(xls.convertErrors,
-									[]string{
-										_cellName,
-										v,
-										"浮点数",
-									})
+								xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
 								n, _err = strconv.ParseFloat(_convertDefaultValue, 64)
 								if _err != nil {
 									n = 0.0
@@ -163,15 +138,7 @@ func (xls *TXlsx) FillVerticalList(fromSheetName string, item any, opts ...Verti
 								dec, _err := decimal.NewFromString(v)
 								if _err != nil {
 									// 记录转换错误
-									if xls.convertErrors == nil {
-										xls.convertErrors = [][]string{}
-									}
-									xls.convertErrors = append(xls.convertErrors,
-										[]string{
-											_cellName,
-											v,
-											"定点数",
-										})
+									xls.addConvertErrorLog([]string{_cellName, v, _tryConvertType})
 									dec, _err = decimal.NewFromString(_convertDefaultValue)
 									if _err != nil {
 										dec = decimal.NewFromInt(0)
