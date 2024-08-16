@@ -2,6 +2,7 @@ package base
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tinybear1976/go-playexcel/core"
 
@@ -51,7 +52,7 @@ func (xls *TXlsx) SheetNameIsExist(sheetName string) bool {
 		return false
 	}
 	for _, name := range xls.sheetsName {
-		if name == sheetName {
+		if strings.EqualFold(name, sheetName) {
 			return true
 		}
 	}
