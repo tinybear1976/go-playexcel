@@ -46,17 +46,17 @@ func (xls *TXlsx) GetSheetsName() map[int]string {
 	return xls.sheetsName
 }
 
-// 检查某个sheetName是否存在
-func (xls *TXlsx) SheetNameIsExist(sheetName string) bool {
+// 检查某个sheetName是否存在,如果存在返回原始sheetName，否则返回空字符串
+func (xls *TXlsx) SheetNameIsExist(sheetName string) string {
 	if xls.sheetsName == nil {
-		return false
+		return ""
 	}
 	for _, name := range xls.sheetsName {
 		if strings.EqualFold(name, sheetName) {
-			return true
+			return name
 		}
 	}
-	return false
+	return ""
 }
 
 // 首次运行该方法。调用该方法只会读取sheet名称列表，并不会加载sheet数据
