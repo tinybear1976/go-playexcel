@@ -157,6 +157,34 @@ if err != nil {
 xls.Reset()
 ```
 
+## SheetNameIsExist
+
+方法：SheetNameIsExist(sheetName string) string
+功能：检查 sheet 名称是否存在。不区分大小写。
+
+参数：
+
+- sheetName (string): 需要检查的 sheet 名称。
+
+返回值：
+如果 sheet 名称不存在则返回空字符串，否则返回原始 sheet 名称。
+
+示例：
+
+```go
+var xls playXLS.TXlsx
+err := xls.OpenFile("example.xlsx")
+if err != nil {
+    fmt.Println("打开文件失败:", err)
+}
+sheetName := "base"
+if name:=xls.SheetNameIsExist(sheetName); name== "" {
+    fmt.Println("sheet名称不存在")
+} else {
+    fmt.Println("sheet存在，原名:",name)
+}
+```
+
 ## GetSheet
 
 方法：GetSheet(sheetName string) ([][]string, error)
